@@ -13,3 +13,4 @@ __pycache__/
 *.xyz
 *.png
 .env
+.egg-info
