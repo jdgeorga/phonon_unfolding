@@ -75,6 +75,55 @@ def add_allegro_number_array(ase_atom: Atoms, eps: float = .75, min_samples: int
 
     return allegro_number_array
 
+def proj_phonons_nlayer(atoms, phonon, phonon_eigvecs, atom_layers):
+        """
+        Project phonon eigenvectors onto different layers.
+
+        :param phonon: Phonopy object with the phonon band structure.
+        :param phonon_eigvecs: Phonon eigenvectors.
+        :param atom_layers: Array indicating the layer assignment of each atom.
+        :return: Projections onto layers and planes.
+        """
+        atom_layers = np.array(atom_layers)
+        num_layers = len(np.unique(atom_layers))
+        phonon_eigvecs = phonon.get_band_structure_dict()['eigenvectors'][0]
+        unitcell = phonon.unitcell.cell
+        atom_pos = phonon.primitive.positions
+        atom_type = phonon.primitive.numbers
+        atom_masses = phonon.primitive.masses
+
+        unit_atoms = len(atom_pos)
+        layer_index = atom_layers[atoms.arrays['atom_types']]
+        vec_all = np.abs(np.array(phonon_eigvecs).reshape(-1, unit_atoms * 3, unit_atoms * 3))
+
+        proj_layer = np.zeros((len(vec_all), len(atom_pos) * 3, 3))
+        proj_plane = np.zeros((len(vec_all), len(atom_pos) * 3, 3))
+
+        color_index = list(range(len(np.unique(layer_index))))
+
+        for i in np.arange(len(atom_pos) * 3):
+            for q in np.arange(len(vec_all)):
+                m1 = vec_all[q, :, i]
+
+                for l in np.arange(len(np.unique(layer_index))):                
+                    layer_mask = np.zeros((len(atom_pos) * 3))
+                    layer_mask[layer_index.repeat(3) == l] = 1.
+
+                    proj_layer[q, i, color_index[l]] = np.abs(m1) ** 2 @ layer_mask
+
+                    in_mask = np.ones((len(atom_pos), 3))
+                    in_mask[:, 2] = 0.
+                    in_mask = in_mask.reshape(-1)
+
+                    out_mask = np.zeros((len(atom_pos), 3))
+                    out_mask[:, 2] = 1.
+                    out_mask = out_mask.reshape(-1)
+
+                    proj_plane[q, i, 0] = np.abs(m1) ** 2 @ in_mask
+                    proj_plane[q, i, 1] = np.abs(m1) ** 2 @ out_mask
+
+        return proj_layer, proj_plane
+
 def phonopy_atoms_to_ase(atoms_phonopy):
     """Convert PhonopyAtoms to ASE Atoms."""
     from ase.atoms import Atoms
