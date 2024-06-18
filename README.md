@@ -6,5 +6,6 @@ This package provides tools for unfolding phonon band structures and parallel fo
 
 To install the package, run:
 
-```sh
-python setup.py install
+## Installation
+
+`pip install -e .`
