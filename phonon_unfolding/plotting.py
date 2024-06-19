@@ -81,12 +81,16 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
         qs_cart_dist[i + 1] += qs_cart_dist[i][-1]
     
     cutoff_max = max([c.max() for c in coefficients])   
+
+    coeff_cutoff = 0.001
+    cutoff_percent = np.max([np.sum(c > coeff_cutoff)/np.sum(c >= 0.0) for c in coefficients])*100
+
     for i_segment in range(num_segments):
         coeffs_flat = coefficients[i_segment].flatten()
         qs_flat = np.repeat(qs_cart_dist[i_segment], num_bands)
         freqs_flat = frequencies[i_segment].flatten()
 
-        cutoff_cond = coeffs_flat > 0.025
+        cutoff_cond = coeffs_flat > 0.01
         coeffs_flat = coeffs_flat[cutoff_cond]
         qs_flat = qs_flat[cutoff_cond]
         freqs_flat = freqs_flat[cutoff_cond]
@@ -120,7 +124,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
     plt.ylim(-50, 600)
     plt.xlabel('Wave Vector')
     plt.ylabel('Frequency (cm$^{-1}$)')
-    plt.title('Unfolded Phonon Band Structure')
+    plt.title(f'Unfolded Phonon Band Structure: \n Showing Top {np.round(cutoff_percent)}% of Phonons ')
     plt.colorbar(label='Weight')
 
     plt.savefig('unfold_phonon_band_structure.png', dpi=300)
