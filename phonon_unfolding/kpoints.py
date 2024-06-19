@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.spatial import cKDTree
 
 def reciprocal_lattice_vectors(lattice_vectors):
     """

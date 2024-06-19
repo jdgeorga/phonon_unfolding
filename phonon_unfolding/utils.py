@@ -99,7 +99,14 @@ def proj_phonons_nlayer(atoms, phonon, phonon_eigvecs, atom_layers):
         proj_layer = np.zeros((len(vec_all), len(atom_pos) * 3, 3))
         proj_plane = np.zeros((len(vec_all), len(atom_pos) * 3, 3))
 
-        color_index = list(range(len(np.unique(layer_index))))
+        if len(np.unique(layer_index)) == 3:
+            color_index = [0,1,2]
+
+        if len(np.unique(layer_index)) == 2:
+            color_index = [0,2]
+
+        if len(np.unique(layer_index)) == 1:
+            color_index = [0]
 
         for i in np.arange(len(atom_pos) * 3):
             for q in np.arange(len(vec_all)):

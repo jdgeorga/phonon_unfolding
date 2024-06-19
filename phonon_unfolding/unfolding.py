@@ -114,7 +114,7 @@ def compute_B_js(Q, G_b, eigenvectors_Q, R_I, g_j, N):
 
     B_js = np.zeros((num_j, num_s, num_n), dtype=complex)
 
-    phases = np.exp(-1j * np.einsum('ji,li->jl', G_b + g_j, R_I), optimize = True)
+    phases = np.exp(-1j * np.einsum('ji,li->jl', G_b + g_j, R_I))
 
     for j, g in enumerate(g_j):
         B_js[j] = np.einsum('i,isn->sn', phases[j], eigenvectors_Q, optimize=True)

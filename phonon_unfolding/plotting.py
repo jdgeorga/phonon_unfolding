@@ -79,7 +79,8 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
 
     for i in range(len(qs_cart_dist) - 1):
         qs_cart_dist[i + 1] += qs_cart_dist[i][-1]
-        
+    
+    cutoff_max = max([c.max() for c in coefficients])   
     for i_segment in range(num_segments):
         coeffs_flat = coefficients[i_segment].flatten()
         qs_flat = np.repeat(qs_cart_dist[i_segment], num_bands)
@@ -104,7 +105,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
             freqs_decile = freqs_flat[start_idx:end_idx]
             coeffs_decile = coeffs_flat[start_idx:end_idx]
 
-            plt.scatter(qs_decile, freqs_decile * 33.356, c=coeffs_decile, cmap='Blues', s=1, alpha=1, vmin=0.0, vmax=0.15, zorder=i + 1)
+            plt.scatter(qs_decile, freqs_decile * 33.356, c=coeffs_decile, cmap='Blues', s=1, alpha=1, vmin=0.0, vmax=cutoff_max, zorder=i + 1)
 
     xticks = [x[-1] for x in qs_cart_dist]
     xticks.insert(0, 0)
