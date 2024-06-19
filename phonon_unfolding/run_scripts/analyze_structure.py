@@ -13,7 +13,7 @@ from phonon_unfolding.unfolding import (get_Q_G_b_list_and_cart_Q_list,
 import argparse
 
 
-def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive_original_unit_cell, atom_layers):
+def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive_file, atom_layers):
     """
     Analyze the structure to produce and plot the unfolded phonon band structure.
 
@@ -26,6 +26,9 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     """
     # Load the relaxed atomic structure
     relaxed_atoms = read(input_file)
+
+    # Load the primitive unit cell
+    primitive_original_unit_cell = read(primitive_file)
     
     # Load the displacement forces
     disp_forces = np.load(disp_forces_file)
@@ -104,29 +107,16 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     return 0
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Analyze structure to produce unfolded band structure")
-    parser.add_argument('input_file', type=str, help='Input file containing the relaxed atomic structure')
-    parser.add_argument('disp_forces_file', type=str, help='Input file containing the displacement forces (numpy format)')
-    parser.add_argument('phonopy_yaml_file', type=str, help='Input file containing the phonopy YAML data')
-    
-    args = parser.parse_args()
-    
-
-    import pymoire as pm
-    materials_db_path = pm.materials.get_materials_db_path()
-    layer_1 = pm.read_monolayer(materials_db_path / 'MoS2.cif')
-    layer_2 = pm.read_monolayer(materials_db_path / 'MoS2.cif')
-    layer_1.positions -= layer_1.positions[0]
-    layer_2.positions -= layer_2.positions[0]
-    layer_1.arrays['atom_types'] = np.array([0, 2, 1], dtype=int)
-    layer_2.arrays['atom_types'] = np.array([0, 2, 1], dtype=int)
-    primitive_original_unit_cell = layer_1 + layer_2
+    input_file = "relaxed_atoms.xyz" # Relaxed Supercell
+    primitive_file = "primitive_atoms.xyz" # Primitive Unit Cell
+    disp_forces_file = "disp_forces.npy" # Forces from generate_forces.py
+    phonopy_yaml_file = "phonon_with_displacements.yaml" #phonopy_yaml from generate_phonopy_yaml.py
 
     # Parse the atom_layers argument into a list of integers
     atom_layers = [0,0,0,1,1,1]
     
-    analyze_structure(args.input_file,
-                      args.disp_forces_file,
-                      args.phonopy_yaml_file,
-                      primitive_original_unit_cell,
+    analyze_structure(input_file,
+                      disp_forces_file,
+                      phonopy_yaml_file,
+                      primitive_file,
                       atom_layers)
