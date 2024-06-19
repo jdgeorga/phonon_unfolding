@@ -31,17 +31,21 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     primitive_original_unit_cell = read(primitive_file)
     
     # Load the displacement forces
+    print("Loading displacement forces")
     disp_forces = np.load(disp_forces_file)
     
     # Load the phonopy YAML data
+    print("Loading phonopy YAML data")
     phonon = load(phonopy_yaml_file)
     
     # Assign the displacement forces to the phonon object and compute force constants
+    print("Producing and symmetrizing force constants")
     phonon.forces = disp_forces
     phonon.produce_force_constants()
     phonon.symmetrize_force_constants()
 
     # Plot the folded band structure with projections 
+    print("Plotting folded band structure with projections")
     plot_folded_bandstructure_with_projections(phonon,
                                                relaxed_atoms,
                                                atom_layers
@@ -56,8 +60,6 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
 
     # Adjust the supercell lattice vectors
     supercell_lattice_vectors = phonon.primitive.cell
-
-    print(primitive_lattice_vectors, supercell_lattice_vectors)
 
     # Get high-symmetry q-points and labels from the relaxed atoms
     high_symmetry_q_points, high_symmetry_labels = get_high_symmetry_qpoints(primitive_original_unit_cell)
@@ -81,6 +83,7 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     phonon.set_band_structure(Q_points, is_eigenvectors=True)
 
     # Plot the high-symmetry paths
+    print("Plotting high symmetry paths")
     plot_high_sym_paths(primitive_reciprocal_vectors,
                         supercell_reciprocal_vectors,
                         cart_Q_list)
@@ -96,6 +99,7 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     qs_cart = compute_qs_cart(cart_Q_list)
 
     # Plot the unfolded band structure
+    print("Plotting unfolded band structure")
     plot_unfolded_bandstructure(
         qs_cart, frequencies,
         coefficients,
@@ -107,8 +111,10 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     return 0
 
 if __name__ == "__main__":
-    input_file = "relaxed_atoms.xyz" # Relaxed Supercell
-    primitive_file = "primitive_atoms.xyz" # Primitive Unit Cell
+
+    print("Running analyze_structure.py")
+    input_file = "relaxed_structure.xyz" # Relaxed Supercell
+    primitive_file = "primitive_unitcell.xyz" # Primitive Unit Cell
     disp_forces_file = "disp_forces.npy" # Forces from generate_forces.py
     phonopy_yaml_file = "phonon_with_displacements.yaml" #phonopy_yaml from generate_phonopy_yaml.py
 

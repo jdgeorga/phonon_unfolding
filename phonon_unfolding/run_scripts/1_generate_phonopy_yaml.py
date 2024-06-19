@@ -27,10 +27,9 @@ def generate_phonopy_yaml(input_file, supercell_dim):
     return 0
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate Phonopy YAML file with displacement information")
-    parser.add_argument('input_file', type=str, help='Input file containing the relaxed atomic structure')
-    parser.add_argument('supercell_dim', type=int, nargs=3, help='Supercell dimensions as three integers')
 
-    args = parser.parse_args()
 
-    generate_phonopy_yaml(args.input_file, args.supercell_dim)
+    input_file = "relaxed_MoS2_1D_3.4deg_30atoms.xyz" # Relaxed Supercell
+    supercell_dim = [1, 3, 1]
+
+    generate_phonopy_yaml(input_file, supercell_dim)

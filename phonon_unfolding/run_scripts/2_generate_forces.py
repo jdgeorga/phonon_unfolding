@@ -5,7 +5,6 @@ from phonopy import load
 from moirecompare.utils import phonopy_atoms_to_ase
 import time
 
-from moirecompare.calculators import AllegroCalculator, NLayerCalculator
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -21,7 +20,7 @@ def get_displacement_atoms_from_yaml(yaml_file):
     ase_disp_list = [phonopy_atoms_to_ase(x) for x in phonon_displacement_list]
     return phonon, ase_disp_list
 
-def add_calculators_to_atoms(atoms, intralayer_model, interlayer_model, layer_symbols):
+def add_allegro_calculators_to_atoms(atoms, intralayer_model, interlayer_model, layer_symbols):
     """
     Add calculators to atoms for force calculations.
 
@@ -30,6 +29,8 @@ def add_calculators_to_atoms(atoms, intralayer_model, interlayer_model, layer_sy
     :param interlayer_model: Path to the interlayer model file.
     :param layer_symbols: List of layer symbols.
     """
+    from moirecompare.calculators import AllegroCalculator, NLayerCalculator
+
     intralayer_calcs = [
         AllegroCalculator(atoms[0][atoms[0].arrays['atom_types'] < 3], layer_symbols[0],
                           model_file=intralayer_model, device='cpu')
@@ -52,15 +53,64 @@ def add_calculators_to_atoms(atoms, intralayer_model, interlayer_model, layer_sy
     for a in atoms:
         a.calc = n_layer_calc
 
-def main(input_file, yaml_file, intralayer_MoS2_model, interlayer_MoS2_model, layer_symbols):
+def add_lammps_calculators_to_atoms(atoms,layer_symbols):
+    """
+    Add calculators to atoms for force calculations.
+
+    :param atoms: List of ASE Atoms objects with displacements.
+    :param intralayer_model: Path to the intralayer model file.
+    :param interlayer_model: Path to the interlayer model file.
+    :param layer_symbols: List of layer symbols.
+    """
+
+    from moirecompare.calculators import (MonolayerLammpsCalculator,
+                                          InterlayerLammpsCalculator,
+                                          NLayerCalculator)
+    intralayer_calcs = [
+        MonolayerLammpsCalculator(atoms[0][atoms[0].arrays['atom_types'] < 3],
+                                  layer_symbols[0],
+                                  system_type='TMD',
+                                  intra_potential='tmd.sw')
+    ]
+    interlayer_calcs = []
+
+    for i in np.arange(1, len(layer_symbols)):
+        layer_atoms = atoms[0][np.logical_and(atoms[0].arrays['atom_types'] >= i * 3,
+                                              atoms[0].arrays['atom_types'] < (i + 1) * 3)]
+        intralayer_calcs.append(MonolayerLammpsCalculator(layer_atoms,
+                                                          layer_symbols=layer_symbols[i],
+                                                          system_type='TMD',
+                                                          intra_potential = 'tmd.sw'))
+        bilayer_atoms = atoms[0][np.logical_and(atoms[0].arrays['atom_types'] >= (i - 1) * 3,
+                                                atoms[0].arrays['atom_types'] < (i + 1) * 3)]
+        interlayer_calcs.append(InterlayerLammpsCalculator(bilayer_atoms,
+                                                           layer_symbols=layer_symbols[i - 1:i + 1],
+                                                           system_type='TMD'))
+
+    n_layer_calc = NLayerCalculator(atoms, intralayer_calcs, interlayer_calcs, layer_symbols)
+
+    # Assign calculators to atoms
+    for a in atoms:
+        a.calc = n_layer_calc
+
+
+def main(input_file,
+         yaml_file,
+         layer_symbols,
+         calculator_type,
+         out_file,
+         intralayer_MoS2_model=None,
+         interlayer_MoS2_model=None):
     """
     Main function to compute and save forces for each displacement structure.
 
     :param input_file: Path to the input file containing the relaxed atomic structure.
     :param yaml_file: Path to the phonopy YAML file.
+    :param layer_symbols: List of layer symbols.
+    :param calculator_type: Type of calculator to use (allegro or lammps).
+    :param out_file: Path to the output file to save the forces.
     :param intralayer_MoS2_model: Path to the intralayer model file.
     :param interlayer_MoS2_model: Path to the interlayer model file.
-    :param layer_symbols: List of layer symbols.
     """
     # Initialize the MPI environment
     comm = MPI.COMM_WORLD
@@ -93,12 +143,15 @@ def main(input_file, yaml_file, intralayer_MoS2_model, interlayer_MoS2_model, la
 
     # Scatter the list to all processes
     ase_sublist = comm.scatter(chunks, root=0)
-    print(f"Process {rank} received chunk: {len(ase_sublist)}")
 
     # Initialize calculators
     init_calc_time = time.time()
 
-    add_calculators_to_atoms(ase_sublist, intralayer_MoS2_model, interlayer_MoS2_model, layer_symbols)
+    if calculator_type == "allegro":
+        add_allegro_calculators_to_atoms(ase_sublist, intralayer_MoS2_model, interlayer_MoS2_model, layer_symbols)
+
+    elif calculator_type == "lammps":
+        add_lammps_calculators_to_atoms(ase_sublist, layer_symbols)
 
     forces = [a.get_forces() for a in ase_sublist]
 
@@ -113,7 +166,7 @@ def main(input_file, yaml_file, intralayer_MoS2_model, interlayer_MoS2_model, la
         # Flatten the list of lists
         all_forces = [item for sublist in all_forces for item in sublist]
         disp_forces = np.array(all_forces)
-        np.save('disp_forces.npy', disp_forces)
+        np.save(out_file, disp_forces)
         end_time = time.time()
         print(f"Total time: {end_time - start_time:.2f} seconds")
         print(f"Time to scatter data: {scatter_time - start_time:.2f} seconds")
@@ -122,18 +175,20 @@ def main(input_file, yaml_file, intralayer_MoS2_model, interlayer_MoS2_model, la
         print(f"Time to gather results: {gather_time - calc_time:.2f} seconds")
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Generate forces for displacement structures using MPI")
-    parser.add_argument('input_file', type=str, help='Input file containing the relaxed atomic structure')
-    parser.add_argument('yaml_file', type=str, help='Path to the phonopy YAML file with displacements')
 
-    args = parser.parse_args()
+    input_file = "relaxed_structure.xyz" # Relaxed Supercell
+    phonopy_yaml_file = "phonon_with_displacements.yaml" #phonopy_yaml from generate_phonopy_yaml.py
 
     intralayer_MoS2_model = "mos2_intra_no_shift.pth"
     interlayer_MoS2_model = "interlayer_beefy.pth"
     layer_symbols = [["Mo", "S", "S"], ["Mo", "S", "S"]]
 
-    main(args.input_file, args.yaml_file, intralayer_MoS2_model, interlayer_MoS2_model, layer_symbols)
+    calculator_type = "allegro"
+
+    out_file = "disp_forces.npy"
+
+    main(input_file, phonopy_yaml_file, layer_symbols, calculator_type, out_file,
+         intralayer_MoS2_model, interlayer_MoS2_model)
 
     # Finalize the MPI environment
     MPI.Finalize()
