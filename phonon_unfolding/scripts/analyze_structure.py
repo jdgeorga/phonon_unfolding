@@ -13,7 +13,7 @@ from phonon_unfolding.unfolding import (get_Q_G_b_list_and_cart_Q_list,
 import argparse
 
 
-def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, supercell_dim, atom_layers):
+def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive_original_unit_cell, atom_layers):
     """
     Analyze the structure to produce and plot the unfolded phonon band structure.
 
@@ -46,16 +46,18 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, supercell
 
     # Adjust the primitive lattice vectors based on supercell scaling
     supercell_scale = (np.linalg.norm(phonon.primitive.cell, axis=-1) / 
-                       np.linalg.norm(np.array(relaxed_atoms.cell), axis=-1))
+                       np.linalg.norm(np.array(primitive_original_unit_cell.cell), axis=-1))
     supercell_scale = np.around(supercell_scale)
     primitive_lattice_vectors = (phonon.primitive.cell.T / supercell_scale).T
-    relaxed_atoms.set_cell(primitive_lattice_vectors, scale_atoms=True)
+    primitive_original_unit_cell.set_cell(primitive_lattice_vectors, scale_atoms=True)
 
     # Adjust the supercell lattice vectors
     supercell_lattice_vectors = phonon.primitive.cell
 
+    print(primitive_lattice_vectors, supercell_lattice_vectors)
+
     # Get high-symmetry q-points and labels from the relaxed atoms
-    high_symmetry_q_points, high_symmetry_labels = get_high_symmetry_qpoints(relaxed_atoms)
+    high_symmetry_q_points, high_symmetry_labels = get_high_symmetry_qpoints(primitive_original_unit_cell)
 
     # Interpolate q-points along the high-symmetry path
     num_points = 100
@@ -106,12 +108,25 @@ if __name__ == "__main__":
     parser.add_argument('input_file', type=str, help='Input file containing the relaxed atomic structure')
     parser.add_argument('disp_forces_file', type=str, help='Input file containing the displacement forces (numpy format)')
     parser.add_argument('phonopy_yaml_file', type=str, help='Input file containing the phonopy YAML data')
-    parser.add_argument('supercell_dim', type=int, nargs=3, help='Supercell dimensions as three integers')
-    parser.add_argument('atom_layers', type=str, help='Comma-separated list indicating the layer assignment of each atom')
     
     args = parser.parse_args()
     
+
+    import pymoire as pm
+    materials_db_path = pm.materials.get_materials_db_path()
+    layer_1 = pm.read_monolayer(materials_db_path / 'MoS2.cif')
+    layer_2 = pm.read_monolayer(materials_db_path / 'MoS2.cif')
+    layer_1.positions -= layer_1.positions[0]
+    layer_2.positions -= layer_2.positions[0]
+    layer_1.arrays['atom_types'] = np.array([0, 2, 1], dtype=int)
+    layer_2.arrays['atom_types'] = np.array([0, 2, 1], dtype=int)
+    primitive_original_unit_cell = layer_1 + layer_2
+
     # Parse the atom_layers argument into a list of integers
-    atom_layers = list(map(int, args.atom_layers.split(',')))
+    atom_layers = [0,0,0,1,1,1]
     
-    analyze_structure(args.input_file, args.disp_forces_file, args.phonopy_yaml_file, args.supercell_dim, atom_layers)
+    analyze_structure(args.input_file,
+                      args.disp_forces_file,
+                      args.phonopy_yaml_file,
+                      primitive_original_unit_cell,
+                      atom_layers)
