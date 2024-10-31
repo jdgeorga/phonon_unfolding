@@ -11,6 +11,7 @@ def get_displacement_atoms(ase_atom, supercell_n):
     :return: Tuple containing the Phonopy object and a list of displaced ASE Atoms objects.
     """
     phonopy_atoms = ase_to_phonopy_atoms(ase_atom)
+    print(np.diag(supercell_n))
     phonon = Phonopy(phonopy_atoms, supercell_matrix=np.diag(supercell_n), log_level=2)
     phonon.generate_displacements(is_diagonal=True)
     phonon_displacement_list = phonon.get_supercells_with_displacements()

@@ -82,7 +82,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
     
     cutoff_max = max([c.max() for c in coefficients])   
 
-    coeff_cutoff = 0.001
+    coeff_cutoff = 0.0
     cutoff_percent = np.max([np.sum(c > coeff_cutoff)/np.sum(c >= 0.0) for c in coefficients])*100
 
     for i_segment in range(num_segments):
@@ -90,7 +90,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
         qs_flat = np.repeat(qs_cart_dist[i_segment], num_bands)
         freqs_flat = frequencies[i_segment].flatten()
 
-        cutoff_cond = coeffs_flat > 0.01
+        cutoff_cond = coeffs_flat > coeff_cutoff
         coeffs_flat = coeffs_flat[cutoff_cond]
         qs_flat = qs_flat[cutoff_cond]
         freqs_flat = freqs_flat[cutoff_cond]
@@ -109,7 +109,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
             freqs_decile = freqs_flat[start_idx:end_idx]
             coeffs_decile = coeffs_flat[start_idx:end_idx]
 
-            plt.scatter(qs_decile, freqs_decile * 33.356, c=coeffs_decile, cmap='Blues', s=1, alpha=1, vmin=0.0, vmax=cutoff_max, zorder=i + 1)
+            plt.scatter(qs_decile, freqs_decile * 33.356, c=coeffs_decile, cmap='Reds', s=1, alpha=1, vmin=0.0, vmax=cutoff_max, zorder=i + 1)
 
     xticks = [x[-1] for x in qs_cart_dist]
     xticks.insert(0, 0)
@@ -125,6 +125,8 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
     plt.xlabel('Wave Vector')
     plt.ylabel('Frequency (cm$^{-1}$)')
     plt.title(f'Unfolded Phonon Band Structure: \n Showing Top {np.round(cutoff_percent)}% of Phonons ')
+    plt.title(f'Unfolded Phonon Band Structure')
+
     plt.colorbar(label='Weight')
 
     plt.savefig('unfold_phonon_band_structure.png', dpi=300)
@@ -208,6 +210,7 @@ def plot_folded_bandstructure_with_projections(phonon, atoms, atom_layers):
         plt.axvline(x=pos, c='grey')
 
     plt.xticks(tick_positions, tick_labels)
+    plt.ylim(-50, 600)
     plt.ylabel('Frequency (cm$^{-1}$)')
     plt.title("Folded Moire Phonon Band Structure")
     plt.axhline(0, c='black', lw=1, zorder=0)
