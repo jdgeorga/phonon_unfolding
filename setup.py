@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 setup(
     name='phonon_unfolding',
     version='0.1.0',
-    author='Your Name',
-    author_email='your.email@example.com',
+    author='Johnathan Georgaras',
+    author_email='jdgeorga@stanford.edu',
     description='A package for unfolding phonon band structures and parallel force calculations',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/phonon_unfolding',
+    url='https://github.com/jdgeorga/phonon_unfolding',
     packages=find_packages(),
     install_requires=[
         'numpy',
