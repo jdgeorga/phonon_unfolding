@@ -28,15 +28,15 @@ This repository contains three scripts to analyze the phonon band structure of M
 ### Installation
 
 1. Clone the repository:
-    \`\`\`bash
-    git clone https://github.com/your-repository/MoS2-1D-Phonon-Analysis.git
-    cd MoS2-1D-Phonon-Analysis
-    \`\`\`
+    ```bash
+    git clone https://github.com/jdgeorga/phonon_unfolding.git
+    cd phonon_unfolding
+    ```
 
 2. Install the required Python packages:
-    \`\`\`bash
+    ```bash
     pip install numpy ase phonopy mpi4py matplotlib
-    \`\`\`
+    ```
 
 ### Files and Directories
 
@@ -51,45 +51,45 @@ This repository contains three scripts to analyze the phonon band structure of M
 
 This script generates a Phonopy YAML file with displacement information.
 
-\`\`\`bash
+```bash
 python 1_generate_phonopy_yaml.py
-\`\`\`
+```
 
 **Expected Output:**
 
-- \`phonon_with_displacements.yaml\`: YAML file containing Phonopy displacement information.
+- `phonon_with_displacements.yaml`: YAML file containing Phonopy displacement information.
 - Printed displacements.
 
 ### 2. Generate Forces
 
-This script uses MPI to generate forces for each displacement structure. Run it using the \`srun\` command with the desired number of processes.
+This script uses MPI to generate forces for each displacement structure. Run it using the `srun` command with the desired number of processes.
 
-\`\`\`bash
+```bash
 srun -N 1 -n (num processes) python 2_generate_forces.py
-\`\`\`
+```
 
 **Example:**
 
-\`\`\`bash
+```bash
 srun -N 1 -n 4 python 2_generate_forces.py
-\`\`\`
+```
 
 **Expected Output:**
 
-- \`disp_forces.npy\`: Numpy file containing displacement forces.
+- `disp_forces.npy`: Numpy file containing displacement forces.
 
 ### 3. Analyze Structure
 
 This script analyzes the structure to produce and plot the unfolded phonon band structure.
 
-\`\`\`bash
+```bash
 python 3_analyze_structure.py
-\`\`\`
+```
 
 **Expected Output:**
-- \`folded_phonon_band_structure.png\`: Plot folded supercell phonon band structure.
-- \`unfold_phonon_band_structure.png\`: Plot of the unfolded phonon band structure.
-- \`Path_on_Wigner_Seitz_cells.png\`: Plot of the high-symmetry paths.
+- `folded_phonon_band_structure.png`: Plot folded supercell phonon band structure.
+- `unfold_phonon_band_structure.png`: Plot of the unfolded phonon band structure.
+- `Path_on_Wigner_Seitz_cells.png`: Plot of the high-symmetry paths.
 - Printed steps during the analysis process.
 
 ## Description of Each Script
@@ -99,31 +99,31 @@ python 3_analyze_structure.py
 This script generates a Phonopy YAML file with displacement information from a relaxed atomic structure.
 
 **Arguments:**
-- \`input_file\`: Path to the input file containing the relaxed atomic structure.
-- \`supercell_dim\`: List of three integers representing the supercell dimensions.
+- `input_file`: Path to the input file containing the relaxed atomic structure.
+- `supercell_dim`: List of three integers representing the supercell dimensions.
 
 ### 2_generate_forces.py
 
 This script uses MPI to generate forces for each displacement structure using Allegro or LAMMPS calculators.
 
 **Arguments:**
-- \`input_file\`: Path to the input file containing the relaxed atomic structure.
-- \`yaml_file\`: Path to the Phonopy YAML file with displacements.
-- \`layer_symbols\`: List of layer symbols.
-- \`calculator_type\`: Type of calculator to use (allegro or lammps).
-- \`out_file\`: Path to the output file to save the forces.
-- \`intralayer_model\`: Path to the intralayer model file (only for Allegro).
-- \`interlayer_model\`: Path to the interlayer model file (only for Allegro).
+- `input_file`: Path to the input file containing the relaxed atomic structure.
+- `yaml_file`: Path to the Phonopy YAML file with displacements.
+- `layer_symbols`: List of layer symbols.
+- `calculator_type`: Type of calculator to use (allegro or lammps).
+- `out_file`: Path to the output file to save the forces.
+- `intralayer_model`: Path to the intralayer model file (only for Allegro).
+- `interlayer_model`: Path to the interlayer model file (only for Allegro).
 
 ### 3_analyze_structure.py
 
 This script analyzes the structure to produce and plot the unfolded phonon band structure based on the forces and the Phonopy YAML file.
 
 **Arguments:**
-- \`input_file\`: Path to the input file containing the relaxed atomic structure.
-- \`disp_forces_file\`: Path to the input file containing the displacement forces (numpy format).
-- \`phonopy_yaml_file\`: Path to the input file containing the Phonopy YAML data.
-- \`primitive_file\`: Path to the input file containing the primitive unit cell structure.
-- \`atom_layers\`: List of integers indicating the layer assignment of each atom.
+- `input_file`: Path to the input file containing the relaxed atomic structure.
+- `disp_forces_file`: Path to the input file containing the displacement forces (numpy format).
+- `phonopy_yaml_file`: Path to the input file containing the Phonopy YAML data.
+- `primitive_file`: Path to the input file containing the primitive unit cell structure.
+- `atom_layers`: List of integers indicating the layer assignment of each atom.
 
 ---
