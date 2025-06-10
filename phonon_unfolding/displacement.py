@@ -2,7 +2,7 @@ import numpy as np
 from phonon_unfolding.utils import ase_to_phonopy_atoms, phonopy_atoms_to_ase
 from phonopy import Phonopy
 
-def get_displacement_atoms(ase_atom, supercell_n):
+def get_displacement_atoms(ase_atom, supercell_n,is_diagonal=True,is_plusminus=False,distance=0.01):
     """
     Generate displacement atoms for a given ASE Atoms object and supercell size.
 
@@ -13,7 +13,7 @@ def get_displacement_atoms(ase_atom, supercell_n):
     phonopy_atoms = ase_to_phonopy_atoms(ase_atom)
     print(np.diag(supercell_n))
     phonon = Phonopy(phonopy_atoms, supercell_matrix=np.diag(supercell_n), log_level=2)
-    phonon.generate_displacements(is_diagonal=True)
+    phonon.generate_displacements(is_diagonal=is_diagonal, is_plusminus=is_plusminus, distance=distance)
     phonon_displacement_list = phonon.get_supercells_with_displacements()
     ase_disp_list = [phonopy_atoms_to_ase(x) for x in phonon_displacement_list]
     return phonon, ase_disp_list

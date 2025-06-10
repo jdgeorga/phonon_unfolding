@@ -22,7 +22,6 @@ This repository contains three scripts to analyze the phonon band structure of M
 - ASE
 - Phonopy
 - mpi4py
-- moirecompare (make sure the path to your models and calculators is correct)
 - numpy
 - matplotlib
 

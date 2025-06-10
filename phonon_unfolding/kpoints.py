@@ -26,6 +26,7 @@ def interpolate_qpoints(Qpoints, num_points):
     for i in range(len(Qpoints) - 1):
         start = Qpoints[i]
         end = Qpoints[i + 1]
+        print(i, start, end)
         segment = np.linspace(start, end, num_points, endpoint=True)  # Include endpoint
         path_qpoints.append(segment.tolist())
     return path_qpoints

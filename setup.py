@@ -16,8 +16,7 @@ setup(
         'matplotlib',
         'ase',
         'phonopy',
-        'mpi4py',
-        'moirecompare'
+        'mpi4py'
     ],
     classifiers=[
         'Programming Language :: Python :: 3',

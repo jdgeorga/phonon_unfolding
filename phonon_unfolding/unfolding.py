@@ -2,6 +2,12 @@ import numpy as np
 from scipy.spatial import cKDTree
 from phonon_unfolding.kpoints import generate_mBZ_multiples, build_primitive_bz_grid
 
+def unit_range_fixed(x, L=1, eps=1e-9):
+    y = x.copy()
+    y = y % L
+    y[(np.fabs(y) < eps) | (np.fabs(L - y) < eps)] = 0
+    return y
+
 def get_Q_G_b_list_and_cart_Q_list(path_qpoints, primitive_reciprocal_vectors, supercell_reciprocal_vectors, limit=3):
     """
     Generate Q_G_b_list and cart_Q_list using KDTree.

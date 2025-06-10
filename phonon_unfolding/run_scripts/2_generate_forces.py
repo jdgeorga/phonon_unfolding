@@ -2,7 +2,7 @@ from mpi4py import MPI
 from ase.io import read
 import numpy as np
 from phonopy import load
-from moirecompare.utils import phonopy_atoms_to_ase
+from utils import phonopy_atoms_to_ase
 import time
 
 import warnings

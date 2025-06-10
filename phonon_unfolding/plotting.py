@@ -121,7 +121,8 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
         plt.axvline(x=qs_cart_dist[i][-1], color='grey', linestyle='--')
 
     plt.axhline(y=0, color='black', linestyle='-')
-    plt.ylim(-50, 600)
+    max_freq = np.max([f.max() for f in frequencies]) * 33.356  # Convert to cm^-1
+    plt.ylim(-50, max_freq + 50)
     plt.xlabel('Wave Vector')
     plt.ylabel('Frequency (cm$^{-1}$)')
     plt.title(f'Unfolded Phonon Band Structure: \n Showing Top {np.round(cutoff_percent)}% of Phonons ')
@@ -131,7 +132,7 @@ def plot_unfolded_bandstructure(qs_cart, frequencies, coefficients, num_segments
 
     plt.savefig('unfold_phonon_band_structure.png', dpi=300)
 
-def plot_folded_bandstructure_with_projections(phonon, atoms, atom_layers):
+def plot_folded_bandstructure_with_projections(phonon, atoms, atom_layers, title= "Folded Moire Phonon Band Structure"):
     """
     Plot the folded phonon band structure with projections onto different layers.
 
@@ -210,9 +211,10 @@ def plot_folded_bandstructure_with_projections(phonon, atoms, atom_layers):
         plt.axvline(x=pos, c='grey')
 
     plt.xticks(tick_positions, tick_labels)
-    plt.ylim(-50, 600)
+    max_freq = np.max(frequencies) * 33.356  # Convert to cm^-1
+    plt.ylim(-50, max_freq + 50)
     plt.ylabel('Frequency (cm$^{-1}$)')
-    plt.title("Folded Moire Phonon Band Structure")
+    plt.title(title)
     plt.axhline(0, c='black', lw=1, zorder=0)
     plt.legend()
     plt.tight_layout()

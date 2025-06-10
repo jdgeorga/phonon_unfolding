@@ -163,5 +163,6 @@ def ase_to_phonopy_atoms(ase_atoms):
         symbols=ase_atoms.get_chemical_symbols(),
         scaled_positions=ase_atoms.get_scaled_positions(),
         cell=ase_atoms.cell,
+        masses=ase_atoms.get_masses(),
     )
     return phonopy_atoms
