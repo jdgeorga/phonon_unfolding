@@ -11,8 +11,11 @@ from phonon_unfolding.unfolding import (get_Q_G_b_list_and_cart_Q_list,
                                         compute_coefficients,
                                         compute_qs_cart)
 import argparse
-
-
+def unit_range_fixed(x, L=1, eps=1e-9):
+    y = x.copy()
+    y = y % L
+    y[(np.fabs(y) < eps) | (np.fabs(L - y) < eps)] = 0
+    return y
 def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive_file, atom_layers):
     """
     Analyze the structure to produce and plot the unfolded phonon band structure.
@@ -43,6 +46,7 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     phonon.forces = disp_forces
     phonon.produce_force_constants()
     phonon.symmetrize_force_constants()
+    
 
     # Plot the folded band structure with projections 
     print("Plotting folded band structure with projections")
@@ -61,12 +65,14 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     # Adjust the supercell lattice vectors
     supercell_lattice_vectors = phonon.primitive.cell
 
+
     # Get high-symmetry q-points and labels from the relaxed atoms
     high_symmetry_q_points, high_symmetry_labels = get_high_symmetry_qpoints(primitive_original_unit_cell)
-
+    print(high_symmetry_q_points)
     # Interpolate q-points along the high-symmetry path
-    num_points = 100
+    num_points = 49
     path_qpoints = interpolate_qpoints(high_symmetry_q_points, num_points)
+
 
     # Calculate reciprocal lattice vectors for primitive and supercell
     primitive_reciprocal_vectors = reciprocal_lattice_vectors(primitive_lattice_vectors)
@@ -78,10 +84,21 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
         primitive_reciprocal_vectors,
         supercell_reciprocal_vectors
         )
-
+    Q_points = unit_range_fixed(np.array(Q_points))
+    # for qs in Q_points:
+    #     qs = unit_range_fixed(qs)
+        
     # Set the band structure in the phonon object with eigenvectors
-    phonon.set_band_structure(Q_points, is_eigenvectors=True)
-
+    phonon.run_band_structure(Q_points, with_eigenvectors=True, is_band_connection=False, labels = high_symmetry_labels)
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10, 6))
+    ax = fig.add_subplot(111)
+    phonon.band_structure.plot(ax=ax)
+    ax.set_ylabel("Frequency")
+    plt.savefig('phonon_band_structure.png')
+    plt.close()
+    
+    
     # Plot the high-symmetry paths
     print("Plotting high symmetry paths")
     plot_high_sym_paths(primitive_reciprocal_vectors,
@@ -92,7 +109,8 @@ def analyze_structure(input_file, disp_forces_file, phonopy_yaml_file, primitive
     phonon_band_structure = phonon.get_band_structure_dict()
     frequencies = np.array(phonon_band_structure['frequencies'])
     eigenvectors = np.array(phonon_band_structure['eigenvectors'])
-
+    phonon.band_structure.write_hdf5(filename="phonon_band_structure.hdf5")
+    
     # Compute the coefficients and Cartesian q-points for the unfolded band structure
     coefficients = compute_coefficients(
         frequencies, eigenvectors, cart_Q_list, primitive_reciprocal_vectors, phonon)
